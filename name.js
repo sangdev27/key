@@ -1231,6 +1231,43 @@ app.get('/admin', (req, res) => {
     </html>
   `);
 });
+// ========== CHECK KEY API (dành cho tool Python) ==========
+app.post('/check-key', async (req, res) => {
+  const { key, hwid } = req.body;
+  if (!key) {
+    return res.json({ success: false, message: 'Thiếu key' });
+  }
+
+  try {
+    const keys = await readJSON(KEYS_FILE, []);
+    const keyData = keys.find(k => k.key_value === key && k.is_active === 1);
+    if (!keyData) {
+      return res.json({ success: false, message: 'Key không tồn tại hoặc đã bị vô hiệu hóa', expired: false });
+    }
+    const nowTime = now();
+    if (nowTime > keyData.expires_at) {
+      return res.json({ success: false, message: 'Key đã hết hạn', expired: true });
+    }
+
+    // Ghi nhận HWID (nếu muốn)
+    if (keyData.hwid === null && hwid) {
+      keyData.hwid = hwid;
+      await writeJSON(KEYS_FILE, keys);
+    }
+
+    const remainingSeconds = keyData.expires_at - nowTime;
+    const remainingHours = (remainingSeconds / 3600).toFixed(1);
+    return res.json({
+      success: true,
+      key_type: keyData.key_type,
+      remaining: `${remainingHours} giờ`,
+      expires_at: keyData.expires_at
+    });
+  } catch (err) {
+    console.error('[check-key]', err);
+    return res.json({ success: false, message: 'Lỗi server' });
+  }
+});
 
 // ========== START ==========
 const PORT = process.env.PORT || 3000;
