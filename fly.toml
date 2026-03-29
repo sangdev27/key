@@ -1,4 +1,4 @@
-app = "source-market"
+app = "sangdev-key-server"
 primary_region = "sin"
 
 [http_service]
