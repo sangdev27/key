@@ -1271,6 +1271,7 @@ app.post('/check-key', async (req, res) => {
 
 // ========== START ==========
 const PORT = process.env.PORT || 3000;
+app.listen(PORT);
 
 // Khởi động server ngay lập tức
 (async () => {
